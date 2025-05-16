@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CRA Tax Info Form</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    /* Background & animation */
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #00c6ff, #0072ff);
+      overflow-x: hidden;
+      color: #333;
+    }
+
+    .wave-bg {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+      height: 300px;
+      z-index: -1;
+      background: url('https://i.imgur.com/eWk3t6J.png') repeat-x;
+      background-size: contain;
+      animation: wave 30s linear infinite;
+      opacity: 0.4;
+    }
+
+    @keyframes wave {
+      from { background-position-x: 0; }
+      to { background-position-x: -1600px; }
+    }
+
+    h1 {
+      text-align: center;
+      color: #ffffff;
+      font-size: 36px;
+      margin-top: 30px;
+      text-shadow: 2px 2px 8px #000;
+    }
+
+    form {
+      background: #ffffffcc;
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 850px;
+      margin: 40px auto;
+      box-shadow: 0 0 25px rgba(0, 0, 0, 0.2);
+      animation: fadeIn 1.5s ease-out;
+      backdrop-filter: blur(8px);
+    }
+
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: 600;
+      color: #222;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 12px;
+      margin-top: 5px;
+      border: 2px solid #66ccff;
+      border-radius: 8px;
+      transition: 0.3s;
+      background: #f0faff;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: #3399ff;
+      background: #ffffff;
+    }
+
+    .address-group {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .address-buttons {
+      margin-top: 10px;
+    }
+
+    .address-buttons button,
+    button[type="button"] {
+      margin-right: 8px;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #00d2ff, #3a47d5);
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      transition: 0.3s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 12px rgba(0,0,0,0.25);
+    }
+
+    .footer {
+      text-align: center;
+      color: white;
+      font-size: 14px;
+      margin-top: 30px;
+      text-shadow: 1px 1px 3px #000;
+    }
+  </style>
+</head>
+<body>
+
+<div class="wave-bg"></div>
+
+<h1>🌟 CRA Tax Info Collection Form</h1>
+
+<form id="taxForm">
+  <label>Email Address:
+    <input type="email" id="email" required />
+  </label>
+
+  <label>First Name (as per passport):
+    <input type="text" id="firstName" required />
+  </label>
+
+  <label>Last Name:
+    <input type="text" id="lastName" required />
+  </label>
+
+  <label>Phone Number:
+    <input type="tel" id="phone" required />
+  </label>
+
+  <label>SIN Number:
+    <input type="text" id="sin" required />
+  </label>
+
+  <label>Date of Birth:
+    <input type="date" id="dob" required />
+  </label>
+
+  <label>Date of Entry in Canada:
+    <input type="date" id="entryDate" required />
+  </label>
+
+  <label>NETFILE Access Code (if available):
+    <input type="text" id="accessCode" />
+  </label>
+
+  <label>Residential Address (Unit - Street - City - Province - Postal Code):</label>
+  <div id="addressContainer">
+    <div class="address-group">
+      <input type="text" name="address" required />
+    </div>
+  </div>
+  <div class="address-buttons">
+    <button type="button" onclick="addAddress()">+ Add Address</button>
+    <button type="button" onclick="removeAddress()">− Remove Address</button>
+  </div>
+
+  <label>Is mailing address same as residential address?
+    <select id="mailingSame" required>
+      <option value="">Select</option>
+      <option value="Yes">Yes</option>
+      <option value="No">No</option>
+    </select>
+  </label>
+
+  <button type="button" onclick="generatePDF()">📄 Download PDF Summary</button>
+</form>
+
+<div class="footer">Designed with ❤️ by Prince | CRA Info Collector</div>
+
+<script>
+  function addAddress() {
+    const container = document.getElementById("addressContainer");
+    const group = document.createElement("div");
+    group.className = "address-group";
+    group.innerHTML = `<input type="text" name="address" required />`;
+    container.appendChild(group);
+  }
+
+  function removeAddress() {
+    const container = document.getElementById("addressContainer");
+    const groups = container.getElementsByClassName("address-group");
+    if (groups.length > 1) {
+      container.removeChild(groups[groups.length - 1]);
+    }
+  }
+
+  async function generatePDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    const fields = {
+      "Email Address": document.getElementById("email").value,
+      "First Name": document.getElementById("firstName").value,
+      "Last Name": document.getElementById("lastName").value,
+      "Phone Number": document.getElementById("phone").value,
+      "SIN Number": document.getElementById("sin").value,
+      "Date of Birth": document.getElementById("dob").value,
+      "Date of Entry in Canada": document.getElementById("entryDate").value,
+      "NETFILE Access Code": document.getElementById("accessCode").value || "N/A",
+      "Mailing Address Same?": document.getElementById("mailingSame").value,
+    };
+
+    const addressInputs = document.getElementsByName("address");
+    const addresses = Array.from(addressInputs).map(input => input.value);
+
+    doc.setFontSize(16);
+    doc.text("CRA Tax Info Summary", 20, 20);
+    doc.setFontSize(12);
+
+    let y = 40;
+    for (const [label, value] of Object.entries(fields)) {
+      doc.text(`${label}: ${value}`, 20, y);
+      y += 10;
+    }
+
+    addresses.forEach((addr, index) => {
+      doc.text(`Residential Address ${index + 1}: ${addr}`, 20, y);
+      y += 10;
+    });
+
+    const filename = `${fields["First Name"].replace(/\s+/g, '_')}_CRA_Info.pdf`;
+    doc.save(filename);
+  }
+</script>
+
+</body>
+</html>
